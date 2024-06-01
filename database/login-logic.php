@@ -21,7 +21,7 @@ if ($conn->connect_error) {
 }
 
 // Bereid de SQL-instructie voor
-$stmt = $conn->prepare("SELECT password FROM credentials WHERE email = ?");
+$stmt = $conn->prepare("SELECT id, password FROM credentials WHERE email = ?");
 
 if (!$stmt) {
     // Voor foutmeldingen kun je de gebruiker doorverwijzen naar een foutpagina of een bericht weergeven
@@ -35,13 +35,13 @@ $stmt->execute();
 $stmt->store_result();
 
 if ($stmt->num_rows > 0) {
-    $stmt->bind_result($hashed_password);
+    $stmt->bind_result($id, $hashed_password); // Bind the 'id' column as well
     $stmt->fetch();
 
     // Controleer het wachtwoord
     if (password_verify($password, $hashed_password)) {
         // Sla de gebruikersgegevens op in de sessie
-        $_SESSION['email'] = $email;
+        $_SESSION['id'] = $id;
 
         // Regenereren sessie-id om sessiehijacking te voorkomen
         session_regenerate_id(true);

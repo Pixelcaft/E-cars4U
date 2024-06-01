@@ -32,22 +32,38 @@ if (!$idC->decodeToken()) {
 }
 
 // Check if data is valid
-if (isset($data['id']) && isset($data['naam']) && isset($data['achternaam']) && isset($data['prijs']) && isset($data['zitplaatsen']) && isset($data['type'])) {
+if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder']) && isset($data['prijs']) && isset($data['zitplaatsen']) && isset($data['type'])) {
     $id = $data['id'];
-    $naam = $data['naam'];
-    $achternaam = $data['achternaam'];
+    $autonaam = $data['autonaam'];
+    $verhuurder = $data['verhuurder'];
     $prijs = $data['prijs'];
     $zitplaatsen = $data['zitplaatsen'];
     $type = $data['type'];
 
-    // Prepare and execute SQL statement
-    $sql = "UPDATE reizen SET naam='$naam', achternaam='$achternaam', prijs='$prijs', zitplaatsen='$zitplaatsen', type='$type' WHERE id='$id'";
+    // Prepare SQL statement
+    $stmt = $conn->prepare("UPDATE ecars SET autonaam=?, prijs=?, zitplaatsen=?, type=? WHERE id=?");
+    if (!$stmt) {
+        $response = array("message" => "Error: " . $conn->error, "status" => "500");
+        echo json_encode($response);
+        exit();
+    }
 
-    if (mysqli_query($conn, $sql)) {
+    // Bind parameters
+    if (!$stmt->bind_param("siiii", $autonaam, $prijs, $zitplaatsen, $type, $id)) {
+        $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        echo json_encode($response);
+        exit();
+    }
+
+    // Execute statement
+    if ($stmt->execute()) {
         $response = array("message" => "Records updated successfully.", "status" => "200");
     } else {
-        $response = array("message" => "ERROR: Could not execute $sql. " . mysqli_error($conn), "status" => "500");
+        $response = array("message" => "Error: " . $stmt->error, "status" => "500");
     }
+
+    // Close statement
+    $stmt->close();
 } else {
     $response = array("message" => "Invalid input.", "status" => "400");
 }
@@ -62,4 +78,4 @@ header("Content-Type:application/json;charset=UTF-8");
 header("X-Content-Type-Options: nosniff");
 header("Cache-Control: max-age=100");
 echo json_encode($response);
-?>
+exit;

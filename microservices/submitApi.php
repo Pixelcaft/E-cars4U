@@ -32,21 +32,44 @@ if (!$idC->decodeToken()) {
 }
 
 // Check if data is valid
-if (isset($data['naam']) && isset($data['achternaam']) && isset($data['prijs']) && isset($data['zitplaatsen']) && isset($data['type'])) {
-    $naam = $data['naam'];
-    $achternaam = $data['achternaam'];
+if (isset($data['autonaam']) && isset($data['type']) && isset($data['prijs']) && isset($data['zitplaatsen']) && isset($data['verhuurder'])) {
+    $autonaam = $data['autonaam'];
+    $type = $data['type'];
     $prijs = $data['prijs'];
     $zitplaatsen = $data['zitplaatsen'];
-    $type = $data['type'];
+    $verhuurder = $data['verhuurder'];
 
-    // Prepare and execute SQL statement
-    $sql = "INSERT INTO reizen (naam, achternaam, prijs, zitplaatsen, type) VALUES ('$naam', '$achternaam', '$prijs', '$zitplaatsen', '$type')";
+    // Validate input
+    if (!is_numeric($prijs) || !ctype_digit($zitplaatsen) || !is_numeric($verhuurder)) {
+        $response = array("message" => "Invalid input.", "status" => "400");
+        echo json_encode($response);
+        exit();
+    }
 
-    if (mysqli_query($conn, $sql)) {
+    // Prepare SQL statement
+    $stmt = $conn->prepare("INSERT INTO ecars (autonaam, type, prijs, zitplaatsen, verhuurder) VALUES (?, ?, ?, ?, ?)");
+    if (!$stmt) {
+        $response = array("message" => "Error: " . $conn->error, "status" => "500");
+        echo json_encode($response);
+        exit();
+    }
+
+    // Bind parameters
+    if (!$stmt->bind_param("ssiii", $autonaam, $type, $prijs, $zitplaatsen, $verhuurder)) {
+       $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        echo json_encode($response);
+        exit();
+    }
+
+    // Execute statement
+    if ($stmt->execute()) {
         $response = array("message" => "Records added successfully.", "status" => "200");
     } else {
-        $response = array("message" => "ERROR: Could not able to execute $sql. " . mysqli_error($conn), "status" => "500");
+        $response = array("message" => "Error: " . $stmt->error, "status" => "500");
     }
+
+    // Close statement
+    $stmt->close();
 } else {
     $response = array("message" => "Invalid input.", "status" => "400");
 }
@@ -54,11 +77,12 @@ if (isset($data['naam']) && isset($data['achternaam']) && isset($data['prijs']) 
 // Close connection
 mysqli_close($conn);
 
-// Send JSON response
+// Send response
 header("HTTP/1.1 " . $response['status']);
 header("Access-Control-Allow-Origin: *");
 header("Content-Type:application/json;charset=UTF-8");
 header("X-Content-Type-Options: nosniff");
 header("Cache-Control: max-age=100");
 echo json_encode($response);
+exit;
 ?>

@@ -3,8 +3,8 @@
 session_start(); // Start of hervat de sessie
 
 // Controleer of de gebruiker is ingelogd
-if (isset($_SESSION['email'])) {
-    echo "<h1>Welkom, " . $_SESSION['email'] . "!</h1>";
+if (isset($_SESSION['id'])) {
+    echo "<h1>Welkom, " . $_SESSION['id'] . "!</h1>";
     echo '<a href="database/logout-logic.php">Uitloggen</a>'; // Logout link
 } else {
     echo "<h1>U bent niet ingelogd. <a href='login.php'>Login</a></h1>";

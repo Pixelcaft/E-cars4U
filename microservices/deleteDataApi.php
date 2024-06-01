@@ -35,14 +35,30 @@ if (!$idC->decodeToken()) {
 if (isset($data['id'])) {
     $id = $data['id'];
 
-    // Prepare and execute SQL statement
-    $sql = "DELETE FROM reizen WHERE id='$id'";
+    // Prepare SQL statement
+    $stmt = $conn->prepare("DELETE FROM ecars WHERE id = ?");
+    if (!$stmt) {
+        $response = array("message" => "Error: " . $conn->error, "status" => "500");
+        echo json_encode($response);
+        exit();
+    }
 
-    if (mysqli_query($conn, $sql)) {
+    // Bind parameters
+    if (!$stmt->bind_param("i", $id)) {
+        $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        echo json_encode($response);
+        exit();
+    }
+
+    // Execute statement
+    if ($stmt->execute()) {
         $response = array("message" => "Record deleted successfully.", "status" => "200");
     } else {
-        $response = array("message" => "ERROR: Could not execute $sql. " . mysqli_error($conn), "status" => "500");
+        $response = array("message" => "Error: " . $stmt->error, "status" => "500");
     }
+
+    // Close statement
+    $stmt->close();
 } else {
     $response = array("message" => "Invalid input.", "status" => "400");
 }
@@ -57,4 +73,5 @@ header("Content-Type:application/json;charset=UTF-8");
 header("X-Content-Type-Options: nosniff");
 header("Cache-Control: max-age=100");
 echo json_encode($response);
+exit;
 ?>
