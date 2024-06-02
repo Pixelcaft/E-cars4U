@@ -15,7 +15,7 @@
         <input type="email" id="email" name="email" required>
         
         <label for="password">wachtwoord</label>
-        <input type="wachtwoord" id="wachtwoord" name="wachtwoord" required>
+        <input type="password" id="wachtwoord" name="wachtwoord" required>
         <br><br>
         <button type="submit">Login</button>
         <br>

@@ -1,82 +1,131 @@
 <?php
+// Include IdP class
 include_once("IdP-map/IdP.php");
 
+// Function to get token
 function getToken()
 {
+    // Credentials
     $username = "E-cars4U";
     $password = "123";
     $credentials = array(
         'username' => $username,
         'password' => $password,
-        'exp' => time() + (60 * 60)
+        'exp' => time() + (60 * 60) // Token expiration time
     );
 
+    // Create IdP instance and return token
     $idp = new IdP($credentials);
     return $idp->getToken();
 }
 
+// Function to validate content type
+function validateContentType($contentType)
+{
+    // List of valid content types
+    $validContentTypes = ['application/json; charset=UTF-8'];
+    // If content type is not valid, send 415 status code and exit
+    if (!in_array($contentType, $validContentTypes)) {
+        http_response_code(415);
+        die("Unsupported Media Type");
+    }
+}
+
+// Function to make cURL request
 function curlRequest($url, $method, $data = null)
 {
+    // List of allowed HTTP methods
+    $allowed_methods = array('GET', 'POST');
+
+    // If method is not allowed, send 405 status code and exit
+    if (!in_array($method, $allowed_methods)) {
+        http_response_code(405);
+        die("Method not allowed");
+    }
+
+    // Get token
     $token = getToken();
+
+    // Initialize cURL
     $ch = curl_init($url);
 
+    // Set cURL options
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
     curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
     curl_setopt($ch, CURLOPT_USERPWD, "username:password");
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer " . $token, "Content-Type: application/json"));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        "Authorization: Bearer " . $token,
+        "Content-Type: application/json; charset=UTF-8",
+        "Accept: application/json; charset=UTF-8"
+    ));
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 
+    // If data is provided, add it to the request
     if ($data) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     }
 
+    // Execute request and get response
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($ch);
 
+    // If there was an error with the request, close cURL and exit
     if ($response === false) {
         $error_msg = curl_error($ch);
         curl_close($ch);
         die("cURL error: $error_msg");
     }
 
+    // Validate response content type
+    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    validateContentType($contentType);
+
+    // Close cURL and return response
     curl_close($ch);
     return json_decode($response, true);
 }
 
-// CRUD-acties
+// Check if request method is POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Define data for the request
     $data = array(
         'huren' => 'huren',
-        'voornaam' => $_POST['voornaam'],
-        'tussenvoegsel' => $_POST['tussenvoegsel'],
-        'achternaam' => $_POST['achternaam'],
-        'telefoonnummer' => $_POST['telefoonnummer'],
-        'plaats' => $_POST['plaats'],
-        'straat' => $_POST['straat'],
-        'huisnummer' => $_POST['huisnummer'],
-        'autoid' => $_POST['auto_id'],
+        'voornaam' => filter_input(INPUT_POST, 'voornaam', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'tussenvoegsel' => filter_input(INPUT_POST, 'tussenvoegsel', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'achternaam' => filter_input(INPUT_POST, 'achternaam', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'telefoonnummer' => filter_input(INPUT_POST, 'telefoonnummer', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'plaats' => filter_input(INPUT_POST, 'plaats', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'straat' => filter_input(INPUT_POST, 'straat', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'huisnummer' => filter_input(INPUT_POST, 'huisnummer', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'autoid' => filter_input(INPUT_POST, 'auto_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
         'username' => 'E-cars4U',
         'password' => '123'
     );
 
-    echo "dit de data ->";
-    print_r($data);
-
-
+    // Define URL for the request
     $url = "https://localhost/E-cars4U/microservices/submitApi.php";
+
+    // Make the request and get the response
     $response = curlRequest($url, 'POST', $data);
 
-
-    // Redirect om te voorkomen dat het formulier opnieuw wordt verzonden bij paginavernieuwing
+    // Redirect to prevent form resubmission on page refresh
     header("Location: dashboard-anonymous.php");
     exit();
 }
 
+// Define URL and data for the request
 $url = "https://localhost/E-cars4U/microservices/getDataApi.php";
-$data = array('username' => 'E-cars4U', 'password' => '123', 'autoid' => $_GET['auto_id']);
+$data = array(
+    'username' => 'E-cars4U',
+    'password' => '123',
+    'autoid' => filter_input(INPUT_GET, 'auto_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)
+);
+
+// Make the request and get the response
 $response = curlRequest($url, 'GET', $data);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -211,43 +260,6 @@ $response = curlRequest($url, 'GET', $data);
             <button type="submit">Submit</button>
         </form>
     </center>
-
-
-
-    <!-- <script>
-        var modal = document.getElementById("myModal");
-        var btn = document.getElementById("openModalBtn");
-        var span = document.getElementsByClassName("close")[0];
-        var form = document.getElementById("autoform");
-
-        btn.onclick = function() {
-            modal.style.display = "block";
-        }
-
-        span.onclick = function() {
-            modal.style.display = "none";
-            form.reset();
-            document.getElementById('id').value = '';
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-                form.reset();
-                document.getElementById('id').value = '';
-            }
-        }
-
-        function editData(id) {
-            var row = document.querySelector(`tr[data-id="${id}"]`);
-            document.getElementById('id').value = row.children[0].innerText;
-            document.getElementById('autonaam').value = row.children[1].innerText;
-            document.getElementById('type').value = row.children[2].innerText;
-            document.getElementById('zitplaatsen').value = row.children[3].innerText;
-            document.getElementById('prijs').value = row.children[4].innerText;
-            modal.style.display = "block";
-        }
-    </script> -->
 </body>
 
 </html>

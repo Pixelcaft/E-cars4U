@@ -1,97 +1,150 @@
 <?php
+// Start session
 session_start();
 
+// Check if user is logged in, if not redirect to login page
 if (!isset($_SESSION['id'])) {
     header("Location: login.php");
     exit();
 }
 
+// Include IdP class
 include_once("IdP-map/IdP.php");
 
+// Function to get token
 function getToken()
 {
+    // Credentials
     $username = "E-cars4U";
     $password = "123";
     $credentials = array(
         'username' => $username,
         'password' => $password,
-        'exp' => time() + (60 * 60)
+        'exp' => time() + (60 * 60) // Token expiration time
     );
 
+    // Create IdP instance and return token
     $idp = new IdP($credentials);
     return $idp->getToken();
 }
 
+// Function to validate content type
+function validateContentType($contentType)
+{
+    // List of valid content types
+    $validContentTypes = ['application/json; charset=UTF-8'];
+    // If content type is not valid, send 415 status code and exit
+    if (!in_array($contentType, $validContentTypes)) {
+        http_response_code(415);
+        die("Unsupported Media Type");
+    }
+}
+
+// Function to make cURL request
 function curlRequest($url, $method, $data = null)
 {
+    // List of allowed HTTP methods
+    $allowed_methods = array('GET', 'POST', 'PUT', 'DELETE');
+
+    // If method is not allowed, send 405 status code and exit
+    if (!in_array($method, $allowed_methods)) {
+        http_response_code(405);
+        die("Method not allowed");
+    }
+
+    // Get token
     $token = getToken();
+
+    // Initialize cURL
     $ch = curl_init($url);
 
+    // Set cURL options
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
     curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
     curl_setopt($ch, CURLOPT_USERPWD, "username:password");
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer " . $token, "Content-Type: application/json"));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        "Authorization: Bearer " . $token,
+        "Content-Type: application/json; charset=UTF-8",
+        "Accept: application/json; charset=UTF-8"
+    ));
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 
+    // If data is provided, add it to the request
     if ($data) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     }
 
+    // Execute request and get response
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($ch);
 
+    // If there was an error with the request, close cURL and exit
     if ($response === false) {
         $error_msg = curl_error($ch);
         curl_close($ch);
         die("cURL error: $error_msg");
     }
 
+    // Validate response content type
+    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    validateContentType($contentType);
+
+    // Close cURL and return response
     curl_close($ch);
     return json_decode($response, true);
 }
 
-// CRUD-acties
+// Handle POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get data from form
     $data = array(
-        'autonaam' => $_POST['autonaam'],
-        'type' => $_POST['type'],
-        'zitplaatsen' => $_POST['zitplaatsen'],
-        'prijs' => $_POST['prijs'],
-        'verhuurder' => $_SESSION['id'], // Voeg deze regel toe
+        'autonaam' => filter_input(INPUT_POST, 'autonaam', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'type' => filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'zitplaatsen' => filter_input(INPUT_POST, 'zitplaatsen', FILTER_SANITIZE_NUMBER_INT),
+        'prijs' => filter_input(INPUT_POST, 'prijs', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
+        'verhuurder' => $_SESSION['id'],
         'username' => 'E-cars4U',
         'password' => '123'
     );
 
-    echo "dit de data ->";
-    print_r($data);
-
+    // If id is provided, update existing record
     if (!empty($_POST['id'])) {
-        $data['id'] = $_POST['id'];
+        $data['id'] = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $url = "https://localhost/E-cars4U/microservices/updateDataApi.php";
         $response = curlRequest($url, 'PUT', $data);
     } else {
+        // Otherwise, create new record
         $url = "https://localhost/E-cars4U/microservices/submitApi.php";
         $response = curlRequest($url, 'POST', $data);
     }
 
-    // Redirect om te voorkomen dat het formulier opnieuw wordt verzonden bij paginavernieuwing
+    // Redirect to prevent form resubmission on page refresh
     header("Location: dashboard-landlords.php");
     exit();
 }
 
+// Handle GET request for deleting record
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['delete_id'])) {
     $url = "https://localhost/E-cars4U/microservices/deleteDataApi.php";
-    $data = array('id' => $_GET['delete_id'], 'username' => 'E-cars4U', 'password' => '123');
+    $data = array(
+        'id' => filter_input(INPUT_GET, 'delete_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+        'username' => 'E-cars4U',
+        'password' => '123'
+    );
     $response = curlRequest($url, 'DELETE', $data);
     echo "<p>" . htmlspecialchars($response['message']) . "</p>";
 }
 
+// Get data for current user
 $url = "https://localhost/E-cars4U/microservices/getDataApi.php";
-$data = array('username' => 'E-cars4U', 'password' => '123', 'user' => $_SESSION['id']);
+$data = array(
+    'username' => 'E-cars4U',
+    'password' => '123',
+    'user' => $_SESSION['id']
+);
 $response = curlRequest($url, 'GET', $data);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 

@@ -24,10 +24,10 @@
         <input type="email" id="email" name="email" required>
         
         <label for="wachtwoord">wachtwoord</label>
-        <input type="wachtwoord" id="wachtwoord" name="wachtwoord" required>
+        <input type="password" id="wachtwoord" name="wachtwoord" required>
         
         <label for="re-wachtwoord">re-wachtwoord</label>
-        <input type="wachtwoord" id="re-wachtwoord" name="rewachtwoord" required>
+        <input type="password" id="re-wachtwoord" name="rewachtwoord" required>
         <br>
         <br>
         
