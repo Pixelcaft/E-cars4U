@@ -45,7 +45,7 @@ function curlRequest($url, $method, $data = null)
 }
 
 $url = "https://localhost/E-cars4U/microservices/getDataApi.php";
-$data = array('username' => 'E-cars4U', 'password' => '123');
+$data = array('username' => 'E-cars4U', 'password' => '123', 'top' => '5');
 $response = curlRequest($url, 'GET', $data);
 ?>
 <!DOCTYPE html>
@@ -78,9 +78,7 @@ $response = curlRequest($url, 'GET', $data);
     </style>
 </head>
 <body>
-    <a href="index.php">Home</a> 
-    &nbsp; &nbsp; &nbsp; 
-    <a href="top-cheaper-cars.php">top 5 goedkoopste</a>
+    <a href="dashboard-anonymous.php">Back</a>
     <br><br>
 <table>
         <thead>
@@ -105,7 +103,7 @@ $response = curlRequest($url, 'GET', $data);
                         <td><?php echo htmlspecialchars($row['prijs']); ?></td>
                         <td><?php echo htmlspecialchars($row['verhuurder']); ?></td>
                         <td>
-                            <a href="car-huren.php?auto_id=<?php echo $row['id']; ?>">Huren</a>
+                            <a href="car-huren.php?huren_id=<?php echo $row['id']; ?>">Huren</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

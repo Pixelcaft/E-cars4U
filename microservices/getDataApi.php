@@ -32,12 +32,18 @@ if (!$idC->decodeToken()) {
 }
 
 $user = isset($data['user']) ? $data['user'] : '';
+$top = isset($data['top']) ? $data['top'] : '';
+$autoid = isset($data['autoid']) ? $data['autoid'] : '';
 
 // Prepare SQL statement
-if (empty($user)) {
-    $stmt = $conn->prepare("SELECT ecars.*, credentials.firstname, credentials.infix, credentials.lastname FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id");
+if (!empty($autoid)) {
+    $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id WHERE ecars.id = ?");
+} elseif (!empty($top)) {
+    $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id ORDER BY ecars.prijs ASC LIMIT 5");
+} elseif (empty($user)) {
+    $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id ORDER BY ecars.prijs ASC");
 } else {
-    $stmt = $conn->prepare("SELECT ecars.*, credentials.firstname, credentials.infix, credentials.lastname FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id WHERE ecars.verhuurder = ?");
+    $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id WHERE ecars.verhuurder = ?");
 }
 
 if (!$stmt) {
@@ -47,7 +53,9 @@ if (!$stmt) {
 }
 
 // Bind the user parameter to the prepared statement
-if (!empty($user)) {
+if (!empty($autoid)) {
+    $stmt->bind_param("s", $autoid);
+} elseif (!empty($user)) {
     $stmt->bind_param("s", $user);
 }
 
@@ -63,8 +71,8 @@ $data = array();
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $row['verhuurder'] = $row['firstname'] . ' ' . $row['infix'] . ' ' . $row['lastname'];
-        unset($row['firstname'], $row['infix'], $row['lastname']);
+        $row['verhuurder'] = $row['voornaam'] . ' ' . $row['tussenvoegsel'] . ' ' . $row['achternaam'];
+        unset($row['voornaam'], $row['tussenvoegsel'], $row['achternaam']);
         $data[] = $row;
     }
     $response = array("message" => "Data retrieved successfully.", "status" => "200", "data" => $data);

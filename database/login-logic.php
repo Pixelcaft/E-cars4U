@@ -4,10 +4,10 @@ include 'dbconnection.php'; // Controleer of dit bestand correct is
 
 // Haal de POST-variabelen op
 $email = $_POST['email'] ?? '';
-$password = $_POST['password'] ?? '';
+$wachtwoord = $_POST['wachtwoord'] ?? '';
 
 // Controleer of de velden zijn ingevuld
-if (empty($email) || empty($password)) {
+if (empty($email) || empty($wachtwoord)) {
     // Voor foutmeldingen kun je de gebruiker doorverwijzen naar een foutpagina of een bericht weergeven
     header('Location: ../login.php?error=empty_fields');
     exit;
@@ -21,7 +21,7 @@ if ($conn->connect_error) {
 }
 
 // Bereid de SQL-instructie voor
-$stmt = $conn->prepare("SELECT id, password FROM credentials WHERE email = ?");
+$stmt = $conn->prepare("SELECT id, wachtwoord FROM credentials WHERE email = ?");
 
 if (!$stmt) {
     // Voor foutmeldingen kun je de gebruiker doorverwijzen naar een foutpagina of een bericht weergeven
@@ -39,7 +39,7 @@ if ($stmt->num_rows > 0) {
     $stmt->fetch();
 
     // Controleer het wachtwoord
-    if (password_verify($password, $hashed_password)) {
+    if (password_verify($wachtwoord, $hashed_password)) {
         // Sla de gebruikersgegevens op in de sessie
         $_SESSION['id'] = $id;
 

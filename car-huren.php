@@ -1,11 +1,4 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['id'])) {
-    header("Location: login.php");
-    exit();
-}
-
 include_once("IdP-map/IdP.php");
 
 function getToken()
@@ -54,11 +47,15 @@ function curlRequest($url, $method, $data = null)
 // CRUD-acties
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = array(
-        'autonaam' => $_POST['autonaam'],
-        'type' => $_POST['type'],
-        'zitplaatsen' => $_POST['zitplaatsen'],
-        'prijs' => $_POST['prijs'],
-        'verhuurder' => $_SESSION['id'], // Voeg deze regel toe
+        'huren' => 'huren',
+        'voornaam' => $_POST['voornaam'],
+        'tussenvoegsel' => $_POST['tussenvoegsel'],
+        'achternaam' => $_POST['achternaam'],
+        'telefoonnummer' => $_POST['telefoonnummer'],
+        'plaats' => $_POST['plaats'],
+        'straat' => $_POST['straat'],
+        'huisnummer' => $_POST['huisnummer'],
+        'autoid' => $_POST['auto_id'],
         'username' => 'E-cars4U',
         'password' => '123'
     );
@@ -66,29 +63,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo "dit de data ->";
     print_r($data);
 
-    if (!empty($_POST['id'])) {
-        $data['id'] = $_POST['id'];
-        $url = "https://localhost/E-cars4U/microservices/updateDataApi.php";
-        $response = curlRequest($url, 'PUT', $data);
-    } else {
-        $url = "https://localhost/E-cars4U/microservices/submitApi.php";
-        $response = curlRequest($url, 'POST', $data);
-    }
+
+    $url = "https://localhost/E-cars4U/microservices/submitApi.php";
+    $response = curlRequest($url, 'POST', $data);
+
 
     // Redirect om te voorkomen dat het formulier opnieuw wordt verzonden bij paginavernieuwing
-    header("Location: dashboard-landlords.php");
+    header("Location: dashboard-anonymous.php");
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['delete_id'])) {
-    $url = "https://localhost/E-cars4U/microservices/deleteDataApi.php";
-    $data = array('id' => $_GET['delete_id'], 'username' => 'E-cars4U', 'password' => '123');
-    $response = curlRequest($url, 'DELETE', $data);
-    echo "<p>" . htmlspecialchars($response['message']) . "</p>";
-}
-
 $url = "https://localhost/E-cars4U/microservices/getDataApi.php";
-$data = array('username' => 'E-cars4U', 'password' => '123', 'user' => $_SESSION['id']);
+$data = array('username' => 'E-cars4U', 'password' => '123', 'autoid' => $_GET['auto_id']);
 $response = curlRequest($url, 'GET', $data);
 ?>
 
@@ -160,33 +146,8 @@ $response = curlRequest($url, 'GET', $data);
 </head>
 
 <body>
-    <a href="index.php">Home</a>
-    <h2>Beheer auto's</h2>
-    <button id="openModalBtn">Nieuwe auto Toevoegen</button>
+    <a href="dashboard-anonymous.php">Back</a>
     <br><br>
-    <div id="myModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <form action="dashboard-landlords.php" method="post" id="autoform">
-                <input type="hidden" id="id" name="id">
-
-                <label for="autonaam">AutoNaam:</label><br>
-                <input type="text" id="autonaam" name="autonaam" required><br>
-
-                <label for="type">Type:</label><br>
-                <input type="text" id="type" name="type" required><br>
-
-                <label for="zitplaatsen">Zitplaatsen:</label><br>
-                <input type="number" id="zitplaatsen" name="zitplaatsen" required><br>
-
-                <label for="prijs">Prijs, Per uur:</label><br>
-                <input type="number" id="prijs" name="prijs" required><br>
-
-                <button type="submit">Submit</button>
-            </form>
-        </div>
-    </div>
-
     <table>
         <thead>
             <tr>
@@ -196,7 +157,6 @@ $response = curlRequest($url, 'GET', $data);
                 <th>Zitplaatsen</th>
                 <th>Prijs, Per uur</th>
                 <th>verhuurder</th>
-                <th>Acties</th>
             </tr>
         </thead>
         <tbody>
@@ -209,10 +169,7 @@ $response = curlRequest($url, 'GET', $data);
                         <td><?php echo htmlspecialchars($row['zitplaatsen']); ?></td>
                         <td><?php echo htmlspecialchars($row['prijs']); ?></td>
                         <td><?php echo htmlspecialchars($row['verhuurder']); ?></td>
-                        <td>
-                            <button onclick="editData(<?php echo $row['id']; ?>)">Edit</button>
-                            <a href="dashboard-landlords.php?delete_id=<?php echo $row['id']; ?>">Delete</a>
-                        </td>
+
                     </tr>
                 <?php endforeach; ?>
             <?php else : ?>
@@ -222,8 +179,42 @@ $response = curlRequest($url, 'GET', $data);
             <?php endif; ?>
         </tbody>
     </table>
+    <br><br>
+    <center>
 
-    <script>
+        <form action="car-huren.php" method="post" id="hurenform">
+            <input type="hidden" id="id" name="id">
+
+            <label for="voornaam">Voornaam:</label><br>
+            <input type="text" id="voornaam" name="voornaam" required><br>
+
+            <label for="tussenvoegsel">Tussenvoegsel:</label><br>
+            <input type="text" id="tussenvoegsel" name="tussenvoegsel" required><br>
+
+            <label for="achternaam">Achternaam:</label><br>
+            <input type="text" id="achternaam" name="achternaam" required><br>
+
+            <label for="telefoonnummer">Telefoonnummer:</label><br>
+            <input type="tel" id="telefoonnummer" name="telefoonnummer" required><br>
+
+            <label for="plaats">Plaats:</label><br>
+            <input type="text" id="plaats" name="plaats" required><br>
+
+            <label for="straat">Straat:</label><br>
+            <input type="text" id="straat" name="straat" required><br>
+
+            <label for="huisnummer">Huisnummer:</label><br>
+            <input type="number" id="huisnummer" name="huisnummer" required><br>
+
+            <input type="hidden" name="auto_id" value="<?php echo $_GET['auto_id']; ?>">
+
+            <button type="submit">Submit</button>
+        </form>
+    </center>
+
+
+
+    <!-- <script>
         var modal = document.getElementById("myModal");
         var btn = document.getElementById("openModalBtn");
         var span = document.getElementsByClassName("close")[0];
@@ -256,7 +247,7 @@ $response = curlRequest($url, 'GET', $data);
             document.getElementById('prijs').value = row.children[4].innerText;
             modal.style.display = "block";
         }
-    </script>
+    </script> -->
 </body>
 
 </html>

@@ -31,47 +31,99 @@ if (!$idC->decodeToken()) {
     exit;
 }
 
-// Check if data is valid
-if (isset($data['autonaam']) && isset($data['type']) && isset($data['prijs']) && isset($data['zitplaatsen']) && isset($data['verhuurder'])) {
-    $autonaam = $data['autonaam'];
-    $type = $data['type'];
-    $prijs = $data['prijs'];
-    $zitplaatsen = $data['zitplaatsen'];
-    $verhuurder = $data['verhuurder'];
+$huren = isset($data['huren']) ? $data['huren'] : '';
 
-    // Validate input
-    if (!is_numeric($prijs) || !ctype_digit($zitplaatsen) || !is_numeric($verhuurder)) {
-        $response = array("message" => "Invalid input.", "status" => "400");
-        echo json_encode($response);
-        exit();
-    }
+if (empty($huren)) {
+    // Check if data is valid
+    if (isset($data['autonaam']) && isset($data['type']) && isset($data['prijs']) && isset($data['zitplaatsen']) && isset($data['verhuurder'])) {
+        $autonaam = $data['autonaam'];
+        $type = $data['type'];
+        $prijs = $data['prijs'];
+        $zitplaatsen = $data['zitplaatsen'];
+        $verhuurder = $data['verhuurder'];
 
-    // Prepare SQL statement
-    $stmt = $conn->prepare("INSERT INTO ecars (autonaam, type, prijs, zitplaatsen, verhuurder) VALUES (?, ?, ?, ?, ?)");
-    if (!$stmt) {
-        $response = array("message" => "Error: " . $conn->error, "status" => "500");
-        echo json_encode($response);
-        exit();
-    }
+        // Validate input
+        if (!is_numeric($prijs) || !ctype_digit($zitplaatsen) || !is_numeric($verhuurder)) {
+            $response = array("message" => "Invalid input.", "status" => "400");
+            echo json_encode($response);
+            exit();
+        }
 
-    // Bind parameters
-    if (!$stmt->bind_param("ssiii", $autonaam, $type, $prijs, $zitplaatsen, $verhuurder)) {
-       $response = array("message" => "Error: " . $stmt->error, "status" => "500");
-        echo json_encode($response);
-        exit();
-    }
+        // Prepare SQL statement
+        $stmt = $conn->prepare("INSERT INTO ecars (autonaam, type, prijs, zitplaatsen, verhuurder) VALUES (?, ?, ?, ?, ?)");
+        if (!$stmt) {
+            $response = array("message" => "Error: " . $conn->error, "status" => "500");
+            echo json_encode($response);
+            exit();
+        }
 
-    // Execute statement
-    if ($stmt->execute()) {
-        $response = array("message" => "Records added successfully.", "status" => "200");
+        // Bind parameters
+        if (!$stmt->bind_param("ssiii", $autonaam, $type, $prijs, $zitplaatsen, $verhuurder)) {
+            $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+            echo json_encode($response);
+            exit();
+        }
+
+        // Execute statement
+        if ($stmt->execute()) {
+            $response = array("message" => "Records added successfully.", "status" => "200");
+        } else {
+            $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        }
+
+        // Close statement
+        $stmt->close();
     } else {
-        $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        $response = array("message" => "Invalid input.", "status" => "400");
+    }
+} else {
+    if (isset($data['voornaam']) && isset($data['tussenvoegsel']) && isset($data['achternaam']) && isset($data['telefoonnummer']) && isset($data['plaats']) && isset($data['straat']) && isset($data['huisnummer']) && isset($data['autoid'])) {
+        $voornaam = $data['voornaam'];
+        $tussenvoegsel = $data['tussenvoegsel'];
+        $achternaam = $data['achternaam'];
+        $telefoonnummer = $data['telefoonnummer'];
+        $plaats = $data['plaats'];
+        $straat = $data['straat'];
+        $huisnummer = $data['huisnummer'];
+        $autoid = $data['autoid'];
+
+        // Validate input
+        if (!is_numeric($huisnummer)) {
+            $response = array("message" => "Invalid input.", "status" => "400");
+            echo json_encode($response);
+            exit();
+        }
+
+        // Prepare SQL statement for 'huren' table
+        $stmt = $conn->prepare("INSERT INTO huren (voornaam, tussenvoegsel, achternaam, telefoonnummer, plaats, straat, huisnummer, autoid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        if (!$stmt) {
+            $response = array("message" => "Error: " . $conn->error, "status" => "500");
+            echo json_encode($response);
+            exit();
+        }
+
+        // Bind parameters
+        if (!$stmt->bind_param("ssssssii", $voornaam, $tussenvoegsel, $achternaam, $telefoonnummer, $plaats, $straat, $huisnummer, $autoid)) {
+            $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+            echo json_encode($response);
+            exit();
+        }
+
+        // Execute statement
+        if ($stmt->execute()) {
+            $response = array("message" => "Records added successfully to 'huren' table.", "status" => "200");
+        } else {
+            $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        }
+
+        // Close statement
+        $stmt->close();
+    } else {
+        $response = array("message" => "Invalid input.", "status" => "400");
     }
 
-    // Close statement
-    $stmt->close();
-} else {
-    $response = array("message" => "Invalid input.", "status" => "400");
+    // Close connection
+    mysqli_close($conn);
 }
 
 // Close connection
@@ -85,4 +137,3 @@ header("X-Content-Type-Options: nosniff");
 header("Cache-Control: max-age=100");
 echo json_encode($response);
 exit;
-?>

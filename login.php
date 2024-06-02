@@ -14,9 +14,9 @@
         <label for="email">email</label>
         <input type="email" id="email" name="email" required>
         
-        <label for="password">password</label>
-        <input type="password" id="password" name="password" required>
-        
+        <label for="password">wachtwoord</label>
+        <input type="wachtwoord" id="wachtwoord" name="wachtwoord" required>
+        <br><br>
         <button type="submit">Login</button>
         <br>
         <br>

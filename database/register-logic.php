@@ -2,22 +2,22 @@
 include 'dbconnection.php'; // Controleer of dit bestand correct is
 
 // Haal de POST-variabelen op
-$firstname = $_POST['firstname'] ?? '';
-$infix = $_POST['infix'] ?? '';
-$lastname = $_POST['lastname'] ?? '';
+$voornaam = $_POST['voornaam'] ?? '';
+$tussenvoegsel = $_POST['tussenvoegsel'] ?? '';
+$achternaam = $_POST['achternaam'] ?? '';
 $email = $_POST['email'] ?? '';
-$password = $_POST['password'] ?? '';
-$rePassword = $_POST['rePassword'] ?? '';
+$wachtwoord = $_POST['wachtwoord'] ?? '';
+$rewachtwoord = $_POST['rewachtwoord'] ?? '';
 
 // Controleer of de wachtwoorden overeenkomen
-if ($password !== $rePassword) {
+if ($wachtwoord !== $rewachtwoord) {
     // Voor foutmeldingen kun je de gebruiker doorverwijzen naar een foutpagina of een bericht weergeven
     header('Location: ../register.php?error=passwords_do_not_match');
     exit;
 }
 
 // Controleer of alle velden zijn ingevuld
-if (empty($firstname) || empty($lastname) || empty($email) || empty($password) || empty($rePassword)) {
+if (empty($voornaam) || empty($achternaam) || empty($email) || empty($wachtwoord) || empty($rewachtwoord)) {
     // Voor foutmeldingen kun je de gebruiker doorverwijzen naar een foutpagina of een bericht weergeven
     header('Location: ../register.php?error=empty_fields');
     exit;
@@ -31,7 +31,7 @@ if ($conn->connect_error) {
 }
 
 // Bereid de SQL-instructie voor
-$stmt = $conn->prepare("INSERT INTO credentials (firstname, infix, lastname, email, password) VALUES (?, ?, ?, ?, ?)");
+$stmt = $conn->prepare("INSERT INTO credentials (voornaam, tussenvoegsel, achternaam, email, wachtwoord) VALUES (?, ?, ?, ?, ?)");
 
 if (!$stmt) {
     // Voor foutmeldingen kun je de gebruiker doorverwijzen naar een foutpagina of een bericht weergeven
@@ -40,10 +40,10 @@ if (!$stmt) {
 }
 
 // Hash het wachtwoord
-$password_hashed = password_hash($password, PASSWORD_BCRYPT);
+$password_hashed = password_hash($wachtwoord, PASSWORD_BCRYPT);
 
 // Bind de parameters en voer de instructie uit
-$stmt->bind_param("sssss", $firstname, $infix, $lastname, $email, $password_hashed);
+$stmt->bind_param("sssss", $voornaam, $tussenvoegsel, $achternaam, $email, $password_hashed);
 
 if ($stmt->execute()) {
     // Succesvolle registratie, doorverwijzen naar de homepagina
