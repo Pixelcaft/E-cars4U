@@ -93,7 +93,7 @@ if (isset($data['id'])) {
     if (!$stmt) {
         // If the statement preparation fails, send a 500 Internal Server Error response
         http_response_code(500);
-        $response = array("message" => "Error: " . $conn->error, "status" => "500");
+        $response = array("message" => "An error occurred.", "status" => "500");
         header('Content-Type: application/json; charset=UTF-8');
         header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
@@ -104,7 +104,7 @@ if (isset($data['id'])) {
     if (!$stmt->bind_param("i", $id)) {
         // If the parameter binding fails, send a 500 Internal Server Error response
         http_response_code(500);
-        $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        $response = array("message" => "An error occurred.", "status" => "500");
         header('Content-Type: application/json; charset=UTF-8');
         header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
@@ -118,7 +118,7 @@ if (isset($data['id'])) {
     } else {
         // If the execution fails, send a 500 Internal Server Error response
         http_response_code(500);
-        $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        $response = array("message" => "An error occurred.", "status" => "500");
         header('Content-Type: application/json; charset=UTF-8');
         header("X-Content-Type-Options: nosniff");
         echo json_encode($response);

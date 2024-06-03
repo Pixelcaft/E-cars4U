@@ -107,7 +107,7 @@ if (empty($huren)) {
         if (!$stmt) {
             // If the statement preparation fails, send a 500 Internal Server Error response
             http_response_code(500);
-            $response = array("message" => "Error: " . $conn->error);
+            $response = array("message" => "Internal Server Error");
             header('Content-Type: application/json; charset=UTF-8');
             header("X-Content-Type-Options: nosniff");
             echo json_encode($response);

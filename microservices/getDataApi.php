@@ -100,12 +100,10 @@ if (!empty($autoid)) {
     // If a zoeken parameter is provided, select the records that match the zoeken
     $zoeken = "%$zoeken%";
     $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id WHERE ecars.autonaam LIKE ? OR ecars.type LIKE ? OR ecars.prijs LIKE ? OR ecars.zitplaatsen LIKE ? ORDER BY ecars.prijs ASC");
-} 
-elseif (empty($user)) {
+} elseif (empty($user)) {
     // If no zoeken is provided, select all records
     $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id ORDER BY ecars.prijs ASC");
-}
- else {
+} else {
     // If a user is provided, select the records for that user
     $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id WHERE ecars.verhuurder = ?");
 }
@@ -113,7 +111,7 @@ elseif (empty($user)) {
 // If the statement preparation failed, send a 500 Internal Server Error response
 if (!$stmt) {
     http_response_code(500);
-    $response = array("message" => "Error: " . $conn->error);
+    $response = array("message" => "Internal Server Error");
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
@@ -133,7 +131,7 @@ if (!empty($autoid)) {
 if (!$stmt->execute()) {
     // If the execution failed, send a 500 Internal Server Error response
     http_response_code(500);
-    $response = array("message" => "Error: " . $stmt->error);
+    $response = array("message" => "Internal Server Error");
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
@@ -171,4 +169,3 @@ header("X-Content-Type-Options: nosniff");
 header("Cache-Control: max-age=100");
 echo json_encode($response);
 exit;
-?>

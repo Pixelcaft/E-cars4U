@@ -91,7 +91,7 @@ if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder'])
     $stmt = $conn->prepare("UPDATE ecars SET autonaam=?, prijs=?, zitplaatsen=?, type=? WHERE id=?");
     if (!$stmt) {
         http_response_code(500);
-        $response = array("message" => "Error: " . $conn->error);
+        $response = array("message" => "An error occurred.", "status" => "500");
         header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit();
@@ -101,7 +101,7 @@ if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder'])
     // If there is an error, return a 500 Internal Server Error response
     if (!$stmt->bind_param("sdiss", $autonaam, $prijs, $zitplaatsen, $type, $id)) {
         http_response_code(500);
-        $response = array("message" => "Error: " . $stmt->error);
+        $response = array("message" => "An error occurred.", "status" => "500");
         header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit();
@@ -114,7 +114,7 @@ if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder'])
         $response = array("message" => "Records updated successfully.", "status" => "200");
     } else {
         http_response_code(500);
-        $response = array("message" => "Error: " . $stmt->error);
+        $response = array("message" => "An error occurred.", "status" => "500");
         header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
     }

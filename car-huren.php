@@ -5,18 +5,22 @@ include_once("IdP-map/IdP.php");
 // Function to get token
 function getToken()
 {
-    // Credentials
-    $username = "E-cars4U";
-    $password = "123";
-    $credentials = array(
-        'username' => $username,
-        'password' => $password,
-        'exp' => time() + (60 * 60) // Token expiration time
-    );
+    try {
+        // Credentials
+        $username = "E-cars4U";
+        $password = "123";
+        $credentials = array(
+            'username' => $username,
+            'password' => $password,
+            'exp' => time() + (60 * 60) // Token expiration time
+        );
 
-    // Create IdP instance and return token
-    $idp = new IdP($credentials);
-    return $idp->getToken();
+        // Create IdP instance and return token
+        $idp = new IdP($credentials);
+        return $idp->getToken();
+    } catch (Exception $e) {
+        die(json_encode(array("message" => "Error getting token")));
+    }
 }
 
 // Function to validate content type
@@ -36,61 +40,67 @@ function validateContentType($contentType)
 // Function to make cURL request
 function curlRequest($url, $method, $data = null)
 {
-    // List of allowed HTTP methods
-    $allowed_methods = array('GET', 'POST');
+    try {
+        // List of allowed HTTP methods
+        $allowed_methods = array('GET', 'POST');
 
-    // If method is not allowed, send 405 status code and exit
-    if (!in_array($method, $allowed_methods)) {
-        http_response_code(405);
-        header('Content-Type: application/json; charset=UTF-8');
-        header("X-Content-Type-Options: nosniff");
-        die(json_encode(array("message" => "Method not allowed")));
-    }
+        // If method is not allowed, send 405 status code and exit
+        if (!in_array($method, $allowed_methods)) {
+            http_response_code(405);
+            header('Content-Type: application/json; charset=UTF-8');
+            header("X-Content-Type-Options: nosniff");
+            die(json_encode(array("message" => "Method not allowed")));
+        }
 
-    // Get token
-    $token = getToken();
+        // Get token
+        $token = getToken();
 
-    // Initialize cURL
-    $ch = curl_init($url);
+        // Initialize cURL
+        $ch = curl_init($url);
 
-    // Set cURL options
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-    curl_setopt($ch, CURLOPT_USERPWD, "username:password");
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-        "Authorization: Bearer " . $token,
-        "Content-Type: application/json; charset=UTF-8",
-        "Accept: application/json; charset=UTF-8",
-        "X-Content-Type-Options: nosniff"
-    ));
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+        curl_setopt($ch, CURLOPT_USERPWD, "username:password");
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            "Authorization: Bearer " . $token,
+            "Content-Type: application/json; charset=UTF-8",
+            "Accept: application/json; charset=UTF-8",
+            "X-Content-Type-Options: nosniff"
+        ));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 
-    // If data is provided, add it to the request
-    if ($data) {
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    }
+        // If data is provided, add it to the request
+        if ($data) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        }
 
-    // Execute request and get response
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($ch);
+        // Execute request and get response
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
 
-    // If there was an error with the request, close cURL and exit
-    if ($response === false) {
-        $error_msg = curl_error($ch);
+        // If there was an error with the request, close cURL and exit
+        if ($response === false) {
+            $error_msg = curl_error($ch);
+            curl_close($ch);
+            header('Content-Type: application/json; charset=UTF-8');
+            header("X-Content-Type-Options: nosniff");
+            die(json_encode(array("message" => "cURL error: $error_msg")));
+        }
+
+        // Validate response content type
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        validateContentType($contentType);
+
+        // Close cURL and return response
         curl_close($ch);
-        header('Content-Type: application/json; charset=UTF-8');
-        header("X-Content-Type-Options: nosniff");
-        die(json_encode(array("message" => "cURL error: $error_msg")));
+        return json_decode($response, true);
+    } catch (Exception $e) {
+        // Log the exception message and rethrow it
+        error_log('Caught exception: ' . $e->getMessage());
+        throw $e;
     }
-
-    // Validate response content type
-    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-    validateContentType($contentType);
-
-    // Close cURL and return response
-    curl_close($ch);
-    return json_decode($response, true);
 }
 
 // Check if request method is POST
