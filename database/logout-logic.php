@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', '0');     // Don't display errors
+error_reporting(E_ALL | E_STRICT);  // Report all errors
+
 session_start(); // Start de sessie
 
 // Alle sessievariabelen wissen
