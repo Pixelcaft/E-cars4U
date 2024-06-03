@@ -11,6 +11,7 @@ if (!in_array($method, $allowed_methods)) {
     http_response_code(405);
     $response = array("message" => "Method not allowed.");
     header('Content-Type: application/x-www-form-urlencoded');
+    header('X-Content-Type-Options: nosniff');
     echo json_encode($response);
     exit;
 }
@@ -21,6 +22,7 @@ if ($_SERVER["CONTENT_TYPE"] != 'application/x-www-form-urlencoded') {
     http_response_code(415);
     $response = array("message" => "Unsupported Media Type.");
     header('Content-Type: application/json');
+    header('X-Content-Type-Options: nosniff');
     echo json_encode($response);
     exit;
 }

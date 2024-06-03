@@ -11,6 +11,7 @@ if (!in_array($method, $allowed_methods)) {
     http_response_code(405);
     $response = array("message" => "Method not allowed.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -25,6 +26,7 @@ function validateContentType($contentType)
         http_response_code(415);
         $response = array("message" => "Unsupported Media Type");
         header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit;
     }
@@ -53,6 +55,7 @@ if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     http_response_code(401);
     $response = array("message" => "No token provided.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -69,6 +72,7 @@ if (!$idC->decodeToken()) {
     http_response_code(401);
     $response = array("message" => "Invalid token.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -93,6 +97,7 @@ if (empty($huren)) {
             http_response_code(400);
             $response = array("message" => "Invalid input.");
             header('Content-Type: application/json; charset=UTF-8');
+            header("X-Content-Type-Options: nosniff");
             echo json_encode($response);
             exit();
         }
@@ -104,6 +109,7 @@ if (empty($huren)) {
             http_response_code(500);
             $response = array("message" => "Error: " . $conn->error);
             header('Content-Type: application/json; charset=UTF-8');
+            header("X-Content-Type-Options: nosniff");
             echo json_encode($response);
             exit();
         }
@@ -114,6 +120,7 @@ if (empty($huren)) {
             http_response_code(500);
             $response = array("message" => "Error: " . $stmt->error);
             header('Content-Type: application/json; charset=UTF-8');
+            header("X-Content-Type-Options: nosniff");
             echo json_encode($response);
             exit();
         }
@@ -154,6 +161,7 @@ if (empty($huren)) {
             http_response_code(400);
             $response = array("message" => "Invalid input.", "status" => "400");
             header('Content-Type: application/json; charset=UTF-8');
+            header("X-Content-Type-Options: nosniff");
             echo json_encode($response);
             exit();
         }
@@ -165,6 +173,7 @@ if (empty($huren)) {
             http_response_code(500);
             $response = array("message" => "Error: " . $conn->error, "status" => "500");
             header('Content-Type: application/json; charset=UTF-8');
+            header("X-Content-Type-Options: nosniff");
             echo json_encode($response);
             exit();
         }
@@ -175,6 +184,7 @@ if (empty($huren)) {
             http_response_code(500);
             $response = array("message" => "Error: " . $stmt->error, "status" => "500");
             header('Content-Type: application/json; charset=UTF-8');
+            header("X-Content-Type-Options: nosniff");
             echo json_encode($response);
             exit();
         }

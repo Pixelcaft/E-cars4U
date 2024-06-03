@@ -17,6 +17,7 @@ if (ini_get("session.use_cookies")) {
 session_destroy();
 
 // Doorverwijzen naar de loginpagina of homepagina na logout
+header('X-Content-Type-Options: nosniff');
 header('Location: ../index.php?message=logged_out');
 exit;
 ?>

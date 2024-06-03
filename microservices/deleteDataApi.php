@@ -12,6 +12,7 @@ if (!in_array($method, $allowed_methods)) {
     http_response_code(405);
     $response = array("message" => "Method not allowed.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -27,6 +28,7 @@ function validateContentType($contentType)
         http_response_code(415);
         $response = array("message" => "Unsupported Media Type");
         header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit;
     }
@@ -57,6 +59,7 @@ if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     http_response_code(401);
     $response = array("message" => "No token provided.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -75,6 +78,7 @@ if (!$idC->decodeToken()) {
     http_response_code(401);
     $response = array("message" => "Invalid token.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -91,6 +95,7 @@ if (isset($data['id'])) {
         http_response_code(500);
         $response = array("message" => "Error: " . $conn->error, "status" => "500");
         header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit();
     }
@@ -101,6 +106,7 @@ if (isset($data['id'])) {
         http_response_code(500);
         $response = array("message" => "Error: " . $stmt->error, "status" => "500");
         header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit();
     }
@@ -113,6 +119,10 @@ if (isset($data['id'])) {
         // If the execution fails, send a 500 Internal Server Error response
         http_response_code(500);
         $response = array("message" => "Error: " . $stmt->error, "status" => "500");
+        header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
+        echo json_encode($response);
+        exit();
     }
 
     // Close the SQL statement
@@ -121,6 +131,10 @@ if (isset($data['id'])) {
     // If no id is provided, send a 400 Bad Request response
     http_response_code(400);
     $response = array("message" => "Invalid input.", "status" => "400");
+    header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
+    echo json_encode($response);
+    exit;
 }
 
 // Close the database connection

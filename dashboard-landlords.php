@@ -1,4 +1,5 @@
 <?php
+header("X-Content-Type-Options: nosniff");
 // Start session
 session_start();
 
@@ -65,7 +66,8 @@ function curlRequest($url, $method, $data = null)
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
         "Authorization: Bearer " . $token,
         "Content-Type: application/json; charset=UTF-8",
-        "Accept: application/json; charset=UTF-8"
+        "Accept: application/json; charset=UTF-8",
+        "X-Content-Type-Options: nosniff"
     ));
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);

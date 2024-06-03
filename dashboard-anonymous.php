@@ -27,7 +27,9 @@ function validateContentType($contentType)
     // If content type is not valid, send 415 status code and exit
     if (!in_array($contentType, $validContentTypes)) {
         http_response_code(415);
-        die("Unsupported Media Type");
+        header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
+        die(json_encode(array("message" => "Unsupported Media Type")));
     }
 }
 
@@ -40,7 +42,9 @@ function curlRequest($url, $method, $data = null)
     // If method is not allowed, send 405 status code and exit
     if (!in_array($method, $allowed_methods)) {
         http_response_code(405);
-        die("Method not allowed");
+        header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
+        die(json_encode(array("message" => "Method not allowed")));
     }
 
     // Get token
@@ -56,7 +60,8 @@ function curlRequest($url, $method, $data = null)
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
         "Authorization: Bearer " . $token,
         "Content-Type: application/json; charset=UTF-8",
-        "Accept: application/json; charset=UTF-8"
+        "Accept: application/json; charset=UTF-8",
+        "X-Content-Type-Options: nosniff"
     ));
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -74,7 +79,9 @@ function curlRequest($url, $method, $data = null)
     if ($response === false) {
         $error_msg = curl_error($ch);
         curl_close($ch);
-        die("cURL error: $error_msg");
+        header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
+        die(json_encode(array("message" => "cURL error: $error_msg")));
     }
 
     // Validate response content type
@@ -93,6 +100,7 @@ $data = array('username' => 'E-cars4U', 'password' => '123');
 // Make the request and get the response
 $response = curlRequest($url, 'GET', $data);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

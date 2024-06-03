@@ -11,6 +11,7 @@ if (!in_array($method, $allowed_methods)) {
     http_response_code(405);
     $response = array("message" => "Method not allowed.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -24,6 +25,7 @@ function validateContentType($contentType)
         http_response_code(415);
         $response = array("message" => "Unsupported Media Type");
         header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit;
     }
@@ -50,6 +52,7 @@ if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     http_response_code(401);
     $response = array("message" => "No token provided.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -68,6 +71,7 @@ if (!$idC->decodeToken()) {
     http_response_code(401);
     $response = array("message" => "Invalid token.");
     header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
     exit;
 }
@@ -88,6 +92,7 @@ if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder'])
     if (!$stmt) {
         http_response_code(500);
         $response = array("message" => "Error: " . $conn->error);
+        header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit();
     }
@@ -97,6 +102,7 @@ if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder'])
     if (!$stmt->bind_param("sdiss", $autonaam, $prijs, $zitplaatsen, $type, $id)) {
         http_response_code(500);
         $response = array("message" => "Error: " . $stmt->error);
+        header("X-Content-Type-Options: nosniff");
         echo json_encode($response);
         exit();
     }
@@ -109,6 +115,8 @@ if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder'])
     } else {
         http_response_code(500);
         $response = array("message" => "Error: " . $stmt->error);
+        header("X-Content-Type-Options: nosniff");
+        echo json_encode($response);
     }
 
     // Close the SQL statement
@@ -116,6 +124,8 @@ if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder'])
 } else {
     http_response_code(400);
     $response = array("message" => "Invalid input.", "status" => "400");
+    header("X-Content-Type-Options: nosniff");
+    echo json_encode($response);
 }
 
 // Close the database connection
