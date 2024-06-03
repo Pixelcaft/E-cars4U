@@ -20,8 +20,13 @@ function getToken()
 }
 
 // Function to validate content type
-function validateContentType($contentType)
+function validateContentType($contentType, $method)
 {
+
+    if ($method === 'GET') {
+        return;
+    }
+
     // List of valid content types
     $validContentTypes = ['application/json; charset=UTF-8'];
     // If content type is not valid, send 415 status code and exit
@@ -34,7 +39,7 @@ function validateContentType($contentType)
 }
 
 // Function to make cURL request
-function curlRequest($url, $method, $data = null)
+function curlRequest($url, $method, $data = null, $zoeken = null)
 {
     // List of allowed HTTP methods
     $allowed_methods = array('GET');
@@ -49,6 +54,11 @@ function curlRequest($url, $method, $data = null)
 
     // Get token
     $token = getToken();
+
+    // If zoeken parameter is provided, add it to the request
+    if ($zoeken) {
+        $url .= '?zoeken=' . urlencode($zoeken);
+    }
 
     // Initialize cURL
     $ch = curl_init($url);
@@ -86,19 +96,26 @@ function curlRequest($url, $method, $data = null)
 
     // Validate response content type
     $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-    validateContentType($contentType);
+    validateContentType($contentType, $method);
 
     // Close cURL and return response
     curl_close($ch);
     return json_decode($response, true);
 }
 
-// Define URL and data for the request
-$url = "https://localhost/E-cars4U/microservices/getDataApi.php";
-$data = array('username' => 'E-cars4U', 'password' => '123');
+// Retrieve zoeken parameter from form submission
+$zoeken = isset($_GET['zoeken']) ? $_GET['zoeken'] : null;
 
-// Make the request and get the response
-$response = curlRequest($url, 'GET', $data);
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Define URL and data for the request
+    $url = "https://localhost/E-cars4U/microservices/getDataApi.php";
+    $data = array('username' => 'E-cars4U',
+                  'password' => '123',
+                  'zoeken' => $zoeken
+                );
+    // Make the request and get the response
+    $response = curlRequest($url, 'GET', $data);
+}
 ?>
 
 <!DOCTYPE html>
@@ -135,6 +152,13 @@ $response = curlRequest($url, 'GET', $data);
     &nbsp; &nbsp; &nbsp; 
     <a href="top-cheaper-cars.php">top 5 goedkoopste</a>
     <br><br>
+
+    <form action="dashboard-anonymous.php">
+        <input type="text" name="zoeken" placeholder="Zoeken..">
+        <input type="submit" value="zoeken">
+    </form>
+<br>
+
 <table>
         <thead>
             <tr>

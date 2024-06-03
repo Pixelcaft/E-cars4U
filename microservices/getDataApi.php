@@ -86,6 +86,9 @@ $user = isset($data['user']) ? filter_var($data['user'], FILTER_SANITIZE_FULL_SP
 $top = isset($data['top']) ? filter_var($data['top'], FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
 $autoid = isset($data['autoid']) ? filter_var($data['autoid'], FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
 
+// Get the zoeken parameter from the request data
+$zoeken = isset($data['zoeken']) ? filter_var($data['zoeken'], FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
+
 // Prepare the SQL statement based on the provided parameters
 if (!empty($autoid)) {
     // If an autoid is provided, select the corresponding record
@@ -93,10 +96,16 @@ if (!empty($autoid)) {
 } elseif (!empty($top)) {
     // If a top parameter is provided, select the top 5 records
     $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id ORDER BY ecars.prijs ASC LIMIT 5");
-} elseif (empty($user)) {
-    // If no user is provided, select all records
+} elseif (!empty($zoeken)) {
+    // If a zoeken parameter is provided, select the records that match the zoeken
+    $zoeken = "%$zoeken%";
+    $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id WHERE ecars.autonaam LIKE ? OR ecars.type LIKE ? OR ecars.prijs LIKE ? OR ecars.zitplaatsen LIKE ? ORDER BY ecars.prijs ASC");
+} 
+elseif (empty($user)) {
+    // If no zoeken is provided, select all records
     $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id ORDER BY ecars.prijs ASC");
-} else {
+}
+ else {
     // If a user is provided, select the records for that user
     $stmt = $conn->prepare("SELECT ecars.*, credentials.voornaam, credentials.tussenvoegsel, credentials.achternaam FROM ecars LEFT JOIN credentials ON ecars.verhuurder = credentials.id WHERE ecars.verhuurder = ?");
 }
@@ -111,11 +120,13 @@ if (!$stmt) {
     exit();
 }
 
-// Bind the user or autoid parameter to the prepared statement
+// Bind the user, autoid or zoeken parameter to the prepared statement
 if (!empty($autoid)) {
     $stmt->bind_param("s", $autoid);
 } elseif (!empty($user)) {
     $stmt->bind_param("s", $user);
+} elseif (!empty($zoeken)) {
+    $stmt->bind_param("ssss", $zoeken, $zoeken, $zoeken, $zoeken);
 }
 
 // Execute the statement

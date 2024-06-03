@@ -59,14 +59,38 @@ if ($conn->connect_error) {
     exit;
 }
 
-// Prepare the SQL statement to insert the new user
-$stmt = $conn->prepare("INSERT INTO credentials (voornaam, tussenvoegsel, achternaam, email, wachtwoord) VALUES (?, ?, ?, ?, ?)");
+// Prepare the SQL statement to check if the email is already in use
+$stmt = $conn->prepare("SELECT * FROM credentials WHERE email = ?");
 
 if (!$stmt) {
     // If the statement preparation failed, redirect to the registration page with an error message
     header('Location: ../register.php?error=prepare_failed');
     exit;
 }
+
+// Bind the email parameter to the SQL statement and execute it
+$stmt->bind_param("s", $email);
+
+if (!$stmt->execute()) {
+    // If the execution failed, redirect to the registration page with an error message
+    header('Location: ../register.php?error=execute_failed');
+    exit;
+}
+
+// Get the result of the query
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    // If the email is already in use, redirect to the registration page with an error message
+    header('Location: ../register.php?error=email_in_use');
+    exit;
+}
+
+// Close the statement
+$stmt->close();
+
+// Prepare the SQL statement to insert the new user
+$stmt = $conn->prepare("INSERT INTO credentials (voornaam, tussenvoegsel, achternaam, email, wachtwoord) VALUES (?, ?, ?, ?, ?)");
 
 // Hash the password
 $password_hashed = password_hash($wachtwoord, PASSWORD_BCRYPT);
