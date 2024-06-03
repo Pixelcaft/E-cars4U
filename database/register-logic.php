@@ -43,6 +43,14 @@ $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 $wachtwoord = filter_input(INPUT_POST, 'wachtwoord', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $rewachtwoord = filter_input(INPUT_POST, 'rewachtwoord', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
+// Check if the email is valid
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    // If the email is not valid, redirect to the registration page with an error message
+    header('Location: ../register.php?error=invalid_email');
+    error_log("Invalid email: " . $email); // Audit log
+    exit;
+}
+
 // Check if the passwords match
 if ($wachtwoord !== $rewachtwoord) {
     // If the passwords do not match, redirect to the registration page with an error message
