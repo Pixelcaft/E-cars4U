@@ -26,7 +26,6 @@ function getToken()
 // Function to validate content type
 function validateContentType($contentType)
 {
-    try {
         // List of valid content types
         $validContentTypes = ['application/json; charset=UTF-8'];
         // If content type is not valid, send 415 status code and exit
@@ -36,9 +35,6 @@ function validateContentType($contentType)
             header("X-Content-Type-Options: nosniff");
             die(json_encode(array("message" => "Unsupported Media Type")));
         }
-    } catch (Exception $e) {
-        die(json_encode(array("message" => "Error validating content type")));
-    }
 }
 
 // Function to make cURL request
@@ -111,3 +107,72 @@ $data = array('username' => 'E-cars4U', 'password' => '123', 'top' => '5');
 
 // Make the request and get the response
 $response = curlRequest($url, 'GET', $data);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+         table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <a href="dashboard-anonymous.php">Back</a>
+    <br><br>
+<table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>autoNaam</th>
+                <th>Type</th>
+                <th>Zitplaatsen</th>
+                <th>Prijs, Per uur</th>
+                <th>verhuurder</th>
+                <th>Acties</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (isset($response['data'])) : ?>
+                <?php foreach ($response['data'] as $row) : ?>
+                    <tr data-id="<?php echo $row['id']; ?>">
+                        <td><?php echo htmlspecialchars($row['id']); ?></td>
+                        <td><?php echo htmlspecialchars($row['autonaam']); ?></td>
+                        <td><?php echo htmlspecialchars($row['type']); ?></td>
+                        <td><?php echo htmlspecialchars($row['zitplaatsen']); ?></td>
+                        <td><?php echo htmlspecialchars($row['prijs']); ?></td>
+                        <td><?php echo htmlspecialchars($row['verhuurder']); ?></td>
+                        <td>
+                            <a href="car-huren.php?auto_id=<?php echo $row['id']; ?>">Huren</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <tr>
+                    <td colspan="7">No records found.</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</body>
+</html>
