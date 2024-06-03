@@ -7,7 +7,6 @@ $allowed_methods = array('GET');
 
 // Get the HTTP method from the server
 $method = $_SERVER['REQUEST_METHOD'];
-
 // Check if the method is in the whitelist
 if (!in_array($method, $allowed_methods)) {
     // If not, send a 405 Method Not Allowed response
@@ -16,6 +15,8 @@ if (!in_array($method, $allowed_methods)) {
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
+    // Add audit log for input validation error
+    error_log("Method not allowed: " . $method);
     exit;
 }
 
@@ -24,16 +25,18 @@ function validateContentType($contentType)
 {
     // Define a list of valid content types
     $validContentTypes = ['application/json; charset=UTF-8'];
-    // Check if the content type of the request is in the list of valid content types
-    if (!in_array($contentType, $validContentTypes)) {
-        // If not, send a 415 Unsupported Media Type response
-        http_response_code(415);
-        $response = array("message" => "Unsupported Media Type");
-        header('Content-Type: application/json; charset=UTF-8');
-        header("X-Content-Type-Options: nosniff");
-        echo json_encode($response);
-        exit;
-    }
+// Check if the content type of the request is in the list of valid content types
+if (!in_array($contentType, $validContentTypes)) {
+    // If not, send a 415 Unsupported Media Type response
+    http_response_code(415);
+    $response = array("message" => "Unsupported Media Type");
+    header('Content-Type: application/json; charset=UTF-8');
+    header("X-Content-Type-Options: nosniff");
+    echo json_encode($response);
+    // Add audit log for input validation error
+    error_log("Unsupported Media Type: " . $contentType);
+    exit;
+}
 }
 
 // Get the content type from the server
@@ -55,6 +58,8 @@ $authorization = isset($headers['Authorization']) ? $headers['Authorization'] : 
 if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     // If so, extract the token
     $bearerToken = $matches[1];
+    // Add audit log for successful login
+    error_log("Successful login with token: " . $bearerToken);
 } else {
     // If not, send a 401 Unauthorized response
     http_response_code(401);
@@ -62,6 +67,8 @@ if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
+    // Add audit log for failed login
+    error_log("Failed login: No token provided");
     exit;
 }
 
@@ -81,6 +88,8 @@ if (!$idC->decodeToken()) {
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
+    // Add audit log for failed login
+    error_log("Failed login: Invalid token");
     exit;
 }
 

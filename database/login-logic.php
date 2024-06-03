@@ -16,6 +16,7 @@ if (!in_array($method, $allowed_methods)) {
     header('Content-Type: application/x-www-form-urlencoded');
     header('X-Content-Type-Options: nosniff');
     echo json_encode($response);
+    error_log("Method not allowed: " . $method);  // Log the error
     exit;
 }
 
@@ -27,6 +28,7 @@ if ($_SERVER["CONTENT_TYPE"] != 'application/x-www-form-urlencoded') {
     header('Content-Type: application/json');
     header('X-Content-Type-Options: nosniff');
     echo json_encode($response);
+    error_log("Unsupported Media Type: " . $_SERVER["CONTENT_TYPE"]);  // Log the error
     exit;
 }
 
@@ -44,6 +46,7 @@ $wachtwoord = filter_input(INPUT_POST, 'wachtwoord', FILTER_SANITIZE_FULL_SPECIA
 if (empty($email) || empty($wachtwoord)) {
     // If not, redirect to the login page with an error message
     header('Location: ../login.php?error=empty_fields');
+    error_log("Empty fields: email or password");  // Log the error
     exit;
 }
 
@@ -51,6 +54,7 @@ if (empty($email) || empty($wachtwoord)) {
 if ($conn->connect_error) {
     // If there's a connection error, redirect to the login page with an error message
     header('Location: ../login.php?error=connection_failed');
+    error_log("Database connection failed: " . $conn->connect_error);  // Log the error
     exit;
 }
 
@@ -60,6 +64,7 @@ $stmt = $conn->prepare("SELECT id, wachtwoord FROM credentials WHERE email = ?")
 if (!$stmt) {
     // If the statement preparation failed, redirect to the login page with an error message
     header('Location: ../login.php?error=prepare_failed');
+    error_log("Statement preparation failed: " . $conn->error);  // Log the error
     exit;
 }
 
@@ -83,15 +88,18 @@ if ($stmt->num_rows > 0) {
         
         // Redirect to the home page with a success message
         header('Location: ../index.php?success=login_complete');
+        error_log("User logged in: " . $email);  // Log the successful login
         exit;
     } else {
         // If the password is incorrect, redirect to the login page with an error message
         header('Location: ../login.php?error=invalid_password');
+        error_log("Invalid password: " . $email);  // Log the error
         exit;
     }
 } else {
     // If no user with the given email is found, redirect to the login page with an error message
     header('Location: ../login.php?error=user_not_found');
+    error_log("User not found: " . $email);  // Log the error
     exit;
 }
 

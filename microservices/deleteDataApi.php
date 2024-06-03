@@ -16,6 +16,8 @@ if (!in_array($method, $allowed_methods)) {
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
+    // Add audit log for input validation error
+    error_log("Method not allowed: " . $method);
     exit;
 }
 
@@ -56,6 +58,7 @@ $authorization = isset($headers['Authorization']) ? $headers['Authorization'] : 
 if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     // If so, get the token
     $bearerToken = $matches[1];
+    error_log("Successful login with token: " . $bearerToken);
 } else {
     // If not, send a 401 Unauthorized response
     http_response_code(401);
@@ -63,6 +66,7 @@ if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
+    error_log("Failed login attempt: No token provided");
     exit;
 }
 
@@ -82,6 +86,7 @@ if (!$idC->decodeToken()) {
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
     echo json_encode($response);
+    error_log("Invalid token: " . $bearerToken);
     exit;
 }
 

@@ -20,8 +20,16 @@ function getToken()
 
         // Create IdP instance and return token
         $idp = new IdP($credentials);
-        return $idp->getToken();
+        $token = $idp->getToken();
+
+        // Log the event
+        error_log("User $username logged in successfully.");
+
+        return $token;
     } catch (Exception $e) {
+        // Log the error
+        error_log("Error getting token: " . $e->getMessage());
+
         die(json_encode(array("message" => "Error getting token")));
     }
 }
@@ -29,15 +37,18 @@ function getToken()
 // Function to validate content type
 function validateContentType($contentType)
 {
-        // List of valid content types
-        $validContentTypes = ['application/json; charset=UTF-8'];
-        // If content type is not valid, send 415 status code and exit
-        if (!in_array($contentType, $validContentTypes)) {
-            http_response_code(415);
-            header('Content-Type: application/json; charset=UTF-8');
-            header("X-Content-Type-Options: nosniff");
-            die(json_encode(array("message" => "Unsupported Media Type")));
-        }
+    // List of valid content types
+    $validContentTypes = ['application/json; charset=UTF-8'];
+    // If content type is not valid, send 415 status code and exit
+    if (!in_array($contentType, $validContentTypes)) {
+        // Log the error
+        error_log("Invalid content type: $contentType");
+
+        http_response_code(415);
+        header('Content-Type: application/json; charset=UTF-8');
+        header("X-Content-Type-Options: nosniff");
+        die(json_encode(array("message" => "Unsupported Media Type")));
+    }
 }
 
 // Function to make cURL request
@@ -52,6 +63,7 @@ function curlRequest($url, $method, $data = null)
             http_response_code(405);
             header('Content-Type: application/json; charset=UTF-8');
             header("X-Content-Type-Options: nosniff");
+            error_log("Method not allowed: " . $method); // Audit log
             die(json_encode(array("message" => "Method not allowed")));
         }
 
@@ -86,6 +98,7 @@ function curlRequest($url, $method, $data = null)
         // If there was an error with the request, close cURL and exit
         if ($response === false) {
             $error_msg = curl_error($ch);
+            error_log("cURL error: " . $error_msg); // Audit log
             curl_close($ch);
             header('Content-Type: application/json; charset=UTF-8');
             header("X-Content-Type-Options: nosniff");
@@ -100,6 +113,7 @@ function curlRequest($url, $method, $data = null)
         curl_close($ch);
         return json_decode($response, true);
     } catch (Exception $e) {
+        error_log('Caught exception: ' . $e->getMessage());
         die(json_encode(array("message" => "Error making cURL request")));
     }
 }
@@ -113,12 +127,13 @@ $response = curlRequest($url, 'GET', $data);
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-         table {
+        table {
             width: 100%;
             border-collapse: collapse;
         }
@@ -140,10 +155,11 @@ $response = curlRequest($url, 'GET', $data);
         }
     </style>
 </head>
+
 <body>
     <a href="dashboard-anonymous.php">Back</a>
     <br><br>
-<table>
+    <table>
         <thead>
             <tr>
                 <th>ID</th>
@@ -178,4 +194,5 @@ $response = curlRequest($url, 'GET', $data);
         </tbody>
     </table>
 </body>
+
 </html>

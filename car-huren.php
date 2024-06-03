@@ -22,6 +22,7 @@ function getToken()
         $idp = new IdP($credentials);
         return $idp->getToken();
     } catch (Exception $e) {
+        error_log("Error getting token: " . $e->getMessage()); // Audit log
         die(json_encode(array("message" => "Error getting token")));
     }
 }
@@ -33,6 +34,7 @@ function validateContentType($contentType)
     $validContentTypes = ['application/json; charset=UTF-8'];
     // If content type is not valid, send 415 status code and exit
     if (!in_array($contentType, $validContentTypes)) {
+        error_log("Unsupported Media Type: " . $contentType); // Audit log
         http_response_code(415);
         header('Content-Type: application/json; charset=UTF-8');
         header("X-Content-Type-Options: nosniff");
@@ -49,6 +51,7 @@ function curlRequest($url, $method, $data = null)
 
         // If method is not allowed, send 405 status code and exit
         if (!in_array($method, $allowed_methods)) {
+            error_log("Method not allowed: " . $method); // Audit log
             http_response_code(405);
             header('Content-Type: application/json; charset=UTF-8');
             header("X-Content-Type-Options: nosniff");
@@ -86,6 +89,7 @@ function curlRequest($url, $method, $data = null)
         // If there was an error with the request, close cURL and exit
         if ($response === false) {
             $error_msg = curl_error($ch);
+            error_log("cURL error: " . $error_msg); // Audit log
             curl_close($ch);
             header('Content-Type: application/json; charset=UTF-8');
             header("X-Content-Type-Options: nosniff");
@@ -101,7 +105,7 @@ function curlRequest($url, $method, $data = null)
         return json_decode($response, true);
     } catch (Exception $e) {
         // Log the exception message and rethrow it
-        error_log('Caught exception: ' . $e->getMessage());
+        error_log('Caught exception: ' . $e->getMessage()); // Audit log
         throw $e;
     }
 }

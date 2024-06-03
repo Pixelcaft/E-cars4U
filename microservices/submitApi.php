@@ -15,7 +15,7 @@ if (!in_array($method, $allowed_methods)) {
     $response = array("message" => "Method not allowed.");
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
-    echo json_encode($response);
+    error_log("Method not allowed: " . $method);
     exit;
 }
 
@@ -30,7 +30,7 @@ function validateContentType($contentType)
         $response = array("message" => "Unsupported Media Type");
         header('Content-Type: application/json; charset=UTF-8');
         header("X-Content-Type-Options: nosniff");
-        echo json_encode($response);
+        error_log("Unsupported Media Type: " . $contentType);
         exit;
     }
 }
@@ -59,7 +59,7 @@ if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     $response = array("message" => "No token provided.");
     header('Content-Type: application/json; charset=UTF-8');
     header("X-Content-Type-Options: nosniff");
-    echo json_encode($response);
+    error_log("Invalid token: " . $bearerToken);
     exit;
 }
 

@@ -16,6 +16,7 @@ if (!in_array($method, $allowed_methods)) {
     header('Content-Type: application/json');
     header('X-Content-Type-Options: nosniff');
     echo json_encode($response);
+    error_log("Method not allowed: " . $method); // Audit log
     exit;
 }
 
@@ -27,6 +28,7 @@ if ($_SERVER["CONTENT_TYPE"] != 'application/x-www-form-urlencoded') {
     header('Content-Type: application/json');
     header('X-Content-Type-Options: nosniff');
     echo json_encode($response);
+    error_log("Unsupported Media Type: " . $_SERVER["CONTENT_TYPE"]); // Audit log
     exit;
 }
 
@@ -45,6 +47,7 @@ $rewachtwoord = filter_input(INPUT_POST, 'rewachtwoord', FILTER_SANITIZE_FULL_SP
 if ($wachtwoord !== $rewachtwoord) {
     // If the passwords do not match, redirect to the registration page with an error message
     header('Location: ../register.php?error=passwords_do_not_match');
+    error_log("Passwords do not match for email: " . $email); // Audit log
     exit;
 }
 
@@ -52,6 +55,7 @@ if ($wachtwoord !== $rewachtwoord) {
 if (empty($voornaam) || empty($achternaam) || empty($email) || empty($wachtwoord) || empty($rewachtwoord)) {
     // If not, redirect to the registration page with an error message
     header('Location: ../register.php?error=empty_fields');
+    error_log("Empty fields for email: " . $email); // Audit log
     exit;
 }
 
@@ -59,6 +63,7 @@ if (empty($voornaam) || empty($achternaam) || empty($email) || empty($wachtwoord
 if ($conn->connect_error) {
     // If there's a connection error, redirect to the registration page with an error message
     header('Location: ../register.php?error=connection_failed');
+    error_log("Database connection failed: " . $conn->connect_error); // Audit log
     exit;
 }
 
@@ -68,6 +73,7 @@ $stmt = $conn->prepare("SELECT * FROM credentials WHERE email = ?");
 if (!$stmt) {
     // If the statement preparation failed, redirect to the registration page with an error message
     header('Location: ../register.php?error=prepare_failed');
+    error_log("Statement preparation failed for email: " . $email); // Audit log
     exit;
 }
 
@@ -77,6 +83,7 @@ $stmt->bind_param("s", $email);
 if (!$stmt->execute()) {
     // If the execution failed, redirect to the registration page with an error message
     header('Location: ../register.php?error=execute_failed');
+    error_log("Statement execution failed for email: " . $email); // Audit log
     exit;
 }
 
@@ -86,6 +93,7 @@ $result = $stmt->get_result();
 if ($result->num_rows > 0) {
     // If the email is already in use, redirect to the registration page with an error message
     header('Location: ../register.php?error=email_in_use');
+    error_log("Email already in use: " . $email); // Audit log
     exit;
 }
 
@@ -104,10 +112,12 @@ $stmt->bind_param("sssss", $voornaam, $tussenvoegsel, $achternaam, $email, $pass
 if ($stmt->execute()) {
     // If the registration is successful, redirect to the home page with a success message
     header('Location: ../index.php?success=registration_complete');
+    error_log("Registration successful for email: " . $email); // Audit log
     exit;
 } else {
     // If the execution failed, redirect to the registration page with an error message
     header('Location: ../register.php?error=execute_failed');
+    error_log("Registration failed for email: " . $email); // Audit log
     exit;
 }
 

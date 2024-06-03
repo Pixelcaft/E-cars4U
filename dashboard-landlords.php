@@ -8,6 +8,7 @@ session_start();
 
 // Check if user is logged in, if not redirect to login page
 if (!isset($_SESSION['id'])) {
+    error_log('User not logged in. Redirecting to login page.'); // Audit log
     header("Location: login.php");
     exit();
 }
@@ -43,6 +44,7 @@ function validateContentType($contentType)
     $validContentTypes = ['application/json; charset=UTF-8'];
     // If content type is not valid, send 415 status code and exit
     if (!in_array($contentType, $validContentTypes)) {
+        error_log('Invalid content type: ' . $contentType); // Audit log
         http_response_code(415);
         die("Unsupported Media Type");
     }
@@ -57,6 +59,7 @@ function curlRequest($url, $method, $data = null)
 
         // If method is not allowed, send 405 status code and exit
         if (!in_array($method, $allowed_methods)) {
+            error_log('Invalid HTTP method: ' . $method); // Audit log
             http_response_code(405);
             die("Method not allowed");
         }
@@ -105,7 +108,7 @@ function curlRequest($url, $method, $data = null)
         return json_decode($response, true);
     } catch (Exception $e) {
         // Log the exception message and rethrow it
-        error_log('Caught exception: ' . $e->getMessage());
+        error_log('Caught exception: ' . $e->getMessage()); // Audit log
         throw $e;
     }
 }
@@ -122,6 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'username' => 'E-cars4U',
         'password' => '123'
     );
+
+    // If any input is invalid, log it
+    if (array_search(false, $data, true) !== false) {
+        error_log('Invalid input data: ' . print_r($data, true)); // Audit log
+    }
 
     // If id is provided, update existing record
     if (!empty($_POST['id'])) {

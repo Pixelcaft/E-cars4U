@@ -11,6 +11,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 // Check if the method is in the whitelist
 // If not, return a 405 Method Not Allowed response
 if (!in_array($method, $allowed_methods)) {
+    error_log("Method not allowed: " . $method);  // Audit log
     http_response_code(405);
     $response = array("message" => "Method not allowed.");
     header('Content-Type: application/json; charset=UTF-8');
@@ -25,6 +26,7 @@ function validateContentType($contentType)
 {
     $validContentTypes = ['application/json; charset=UTF-8'];
     if (!in_array($contentType, $validContentTypes)) {
+        error_log("Unsupported Media Type: " . $contentType);  // Audit log
         http_response_code(415);
         $response = array("message" => "Unsupported Media Type");
         header('Content-Type: application/json; charset=UTF-8');
@@ -52,6 +54,7 @@ $authorization = isset($headers['Authorization']) ? $headers['Authorization'] : 
 if (preg_match('/Bearer\s(\S+)/', $authorization, $matches)) {
     $bearerToken = $matches[1];
 } else {
+    error_log("No token provided");  // Audit log
     http_response_code(401);
     $response = array("message" => "No token provided.");
     header('Content-Type: application/json; charset=UTF-8');
@@ -125,6 +128,7 @@ if (isset($data['id']) && isset($data['autonaam']) && isset($data['verhuurder'])
     // Close the SQL statement
     $stmt->close();
 } else {
+    error_log("Invalid input");  // Audit log
     http_response_code(400);
     $response = array("message" => "Invalid input.", "status" => "400");
     header("X-Content-Type-Options: nosniff");

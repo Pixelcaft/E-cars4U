@@ -20,8 +20,15 @@ function getToken()
 
         // Create IdP instance and return token
         $idp = new IdP($credentials);
-        return $idp->getToken();
+        $token = $idp->getToken();
+
+        // Log the event of successful token generation
+        error_log("Token generated successfully for user: $username");
+
+        return $token;
     } catch (Exception $e) {
+        // Log the error
+        error_log('Error getting token: ' . $e->getMessage());
         die(json_encode(array("message" => "Error getting token")));
     }
 }
@@ -29,7 +36,6 @@ function getToken()
 // Function to validate content type
 function validateContentType($contentType, $method)
 {
-
     if ($method === 'GET') {
         return;
     }
@@ -38,6 +44,8 @@ function validateContentType($contentType, $method)
     $validContentTypes = ['application/json; charset=UTF-8'];
     // If content type is not valid, send 415 status code and exit
     if (!in_array($contentType, $validContentTypes)) {
+        // Log the error
+        error_log("Invalid content type: $contentType");
         http_response_code(415);
         header('Content-Type: application/json; charset=UTF-8');
         header("X-Content-Type-Options: nosniff");
@@ -58,6 +66,7 @@ function curlRequest($url, $method, $data = null, $zoeken = null)
             header('Content-Type: application/json; charset=UTF-8');
             header("X-Content-Type-Options: nosniff");
             throw new Exception("Method not allowed");
+            error_log("Method not allowed: " . $method); // Audit log
         }
 
         // Get token
@@ -96,8 +105,10 @@ function curlRequest($url, $method, $data = null, $zoeken = null)
         // If there was an error with the request, close cURL and throw an exception
         if ($response === false) {
             $error_msg = curl_error($ch);
+            error_log("cURL error: " . $error_msg); // Audit log
             curl_close($ch);
             throw new Exception("cURL error: $error_msg");
+            
         }
 
         // Validate response content type
